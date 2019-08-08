@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\getCoinALLPrice::class,
         Commands\getCoinPrice::class,
+        Commands\getCoins_intercoin::class,
     ];
 
     /**

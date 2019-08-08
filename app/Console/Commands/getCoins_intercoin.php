@@ -19,19 +19,19 @@ use DB;
 
 
 /**
- * Class getCoinALLPrice
+ * Class getCoins_intercoin
  *
  * @category Console_Command
  * @package  App\Console\Commands
  */
-class getCoinALLPrice extends Command
+class getCoins_intercoin extends Command
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $signature = "getCoin:all";
+    protected $signature = "getCoin:intercoin {coinType}";
 
     /**
      * The console command description.
@@ -48,51 +48,34 @@ class getCoinALLPrice extends Command
      */
     public function handle()
     {
-        $all=$this->getTickers();
-        foreach($all['data'] as $k=>$v){
-            $json=$this->getTickerInfo($v['pair']);
-            $this->insertUpdate($v['pair'],$json);
-
+        $coinType=$this->argument('coinType');
         
-        }
-        dd();
+        $json=$this->getTickerInfo($coinType);
+        $this->insertUpdate($coinType,$json);
     }
     public function insertUpdate($coinType,$json){
-        $isExist = DB::select('select coin_type from bito where coin_type="'.$coinType.'"');
+        $isExist = DB::select('select coin_type from intercoin where coin_type="'.$coinType.'"');
         if(!$isExist){
-            DB::table('bito')->insert(
+            DB::table('intercoin')->insert(
                 [
                     'coin_type' => $coinType, 
-                    'bids' => json_encode($json['bids']),
-                    'asks' => json_encode($json['asks']),
+                    'bids' => json_encode($json['data']['bids']),
+                    'asks' => json_encode($json['data']['asks']),
                 ]
             );
         }else{
-            DB::table('bito')->where('coin_type',$coinType)->update(
+            DB::table('intercoin')->where('coin_type',$coinType)->update(
                 [
-                    'bids' => json_encode($json['bids']),
-                    'asks' => json_encode($json['asks']),
+                    'bids' => json_encode($json['data']['bids']),
+                    'asks' => json_encode($json['data']['asks']),
                 ]
             );
         };
     }
-    function getTickers() {
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.bitopro.com/v2/tickers");
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        $output = json_decode($output, true);
-
-        return $output;
-    }
     public function getTickerInfo($coinType) {
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.bitopro.com/v2/order-book/".$coinType);
+        curl_setopt($ch, CURLOPT_URL, "https://api-exchange.intercoinx.pro/trading/get_orders_list/".$coinType."/30");
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
